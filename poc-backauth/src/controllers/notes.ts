@@ -2,53 +2,44 @@ import Elysia, { t } from "elysia";
 import { memo, Note } from "../model/note.model";
 import { userMiddleware } from "../lib/auth-middleware";
 
-const notes = new Elysia({ prefix: "note" })
+const notes = new Elysia({ prefix: "api/notes" })
   .decorate('note', new Note())
-  .derive(({ request }) => userMiddleware(request))
+  .derive(({ request }) => {
+    return userMiddleware(request)
+  })
   .model({
     memo: t.Omit(memo, ['author'])
   })
-  .onTransform(function log({ body, params, path, request: { method } }) {
-    console.log(`${method} ${path}`, {
-      body,
-      params
-    })
+  .get("/", ({ note }) => {
+    return note.data
   })
+  .post('/', ({ note, body: { text, subject, timestamp }, user}) => {
+      return note.add({ text, subject, timestamp, author: user?.name })
+    },
+    {
+      body: 'memo'
+    }
+  )
   .guard({
     params: t.Object({
-      index: t.Number()
-    }),
-    isSignIn: true    
-  })
-  .get("/", ({ note }) => note.data)
-  .get(
-    "/:index",
-    ({ note, params: { index }, error }) => {
-      return note.data[index] ?? error(404, `No notes for: ${index}`)
-    }, {
-    params: t.Object({
-      index: t.Number()
+      index: t.Number({
+        minimum: 0,
+      })
     })
   })
   .delete(
     '/:index',
     ({ note, params: { index }, error }) => {
-      if (index in note.data) return note.remove(index);
+      if (index < note.data.length) return note.remove(index);
       return error(422)
     }
-  )
-  .put('/', ({ note, body: { data }, user}) =>
-    note.add({ data, author: user?.name }),
-    {
-      body: 'memo'
-    }
-  )
+  )  
   .patch(
     '/:index',
-    ({ note, params: { index }, body: { data }, error, user }) => {
-      if (index in note.data)
-        return note.update(index, { data, author: user?.name })
-
+    ({ note, params: { index }, body: { text, subject, timestamp }, error, user }) => {
+      if (index in note.data){
+        return note.update(index, { text, subject, timestamp, author: user?.name })
+      }
       return error(422)
     },
     {

@@ -1,6 +1,6 @@
 import { createInsertSchema } from "drizzle-typebox";
 import { t } from "elysia";
-import * as authSchema from "./auth.schema";
+import * as authSchema from "./schema/auth.schema";
 
 export const schema = { ...authSchema } as const
 

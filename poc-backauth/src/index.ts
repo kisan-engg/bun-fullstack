@@ -8,9 +8,7 @@ import { userInfo, userMiddleware } from "./lib/auth-middleware";
 const app = new Elysia()
   .use(swagger())
   .use(cors())
-  .derive(({ request }) => userMiddleware(request))
-  .all("api/auth/*", betterAuthView)
-  .get("/user", ({ user, session }) => userInfo(user, session))
+  .all("api/auth/*", betterAuthView)  
   .use(notes)
   .onError(({ error }) => {
     console.log("Error: ", error)

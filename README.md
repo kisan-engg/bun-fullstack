@@ -1,1 +1,1 @@
-# bun-fullstack
+# Notes Manager
