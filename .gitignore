@@ -25,3 +25,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+poc-backauth/bun.lockb
+poc-backauth/drizzle/**
+poc-webauth/bun.lock
+poc-webauth/bun.lock
