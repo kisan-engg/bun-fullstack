@@ -1,5 +1,5 @@
 import Elysia, { t } from "elysia";
-import { memo, Note } from "../model/note.model";
+import { Note } from "../model/note.model";
 import { userMiddleware } from "../lib/auth-middleware";
 
 const notes = new Elysia({ prefix: "api/notes" })

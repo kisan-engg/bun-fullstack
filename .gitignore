@@ -28,4 +28,3 @@ dist-ssr
 poc-backauth/bun.lockb
 poc-backauth/drizzle/**
 poc-webauth/bun.lock
-poc-webauth/bun.lock

@@ -1,37 +1,59 @@
-import { number } from "better-auth/*";
 import { t } from "elysia";
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-typebox";
+import { deleteNote, insertNote, selectNotes, updateNote } from "../db/operations";
+import { notes } from "../db/schema/notes.schema";
 
-export const memo = t.Object({
-  text: t.String(),
-  subject: t.Optional(t.String()),
-  author: t.Optional(t.String()),
-  timestamp: t.Optional(t.Number())
-})
+const notesTable = {...notes} as const
 
-export type Memo = typeof memo.static
+const _getNote = createSelectSchema(notesTable)
+export type GetNote = typeof _getNote.static
+export type GetNotes = Array<GetNote>
+
+const _addNote = createInsertSchema(notesTable)
+const addNote = t.Omit(_addNote, ["id"])
+export type AddNote = typeof addNote.static
+
+const _changeNote = createUpdateSchema(notesTable)
+const changeNote = t.Omit(_changeNote, ["id"])
+export type ChangeNote = typeof changeNote.static
+
 
 export class Note {
-  constructor(
-    public data: Memo[] = [
-      {
-        text: 'test note',
-        subject: "new",
-        author: 'test1',
-        timestamp: new Date('01/01/2025').getTime()
-      }
-    ]
-  ) { }
 
-  add(note: Memo) {
-    this.data.push(note);
-    return note;
+  async get(userId: string): Promise<GetNotes | null> {
+    try {
+      const result = await selectNotes(userId)
+      return result
+    } catch(error) {
+      console.error(Note.name + ":get:"+error)
+      return null
+    }    
   }
-  remove(index: number) {
-    return this.data.splice(index, 1)
+  async add(note: AddNote): Promise<GetNote | null> {
+    try {
+      const [result] = await insertNote(note)
+      return result
+    } catch(error) {
+      console.error(Note.name + ":add:"+error)
+      return null
+    }
   }
-
-  update(index: number, note: Partial<Memo>) {
-    return (this.data[index] = { ...this.data[index], ...note })
+  async remove(noteId: number): Promise<true | null> {
+    try {
+      await deleteNote(noteId)
+      return true
+    } catch(error) {
+      console.error(Note.name + ":remove:"+error)
+      return null
+    }
   }
-
+  async update(noteId: number, note: ChangeNote): Promise<GetNote | null> {
+    try {
+      const [result] = await updateNote(noteId, note)
+      return result
+    } catch(error) {
+      console.error(Note.name + ":update:"+error)
+      return null
+    }
+  }
 }
