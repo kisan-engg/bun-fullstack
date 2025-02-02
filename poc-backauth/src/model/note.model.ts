@@ -10,11 +10,11 @@ export type GetNote = typeof _getNote.static
 export type GetNotes = Array<GetNote>
 
 const _addNote = createInsertSchema(notesTable)
-const addNote = t.Omit(_addNote, ["id"])
+export const addNote = t.Omit(_addNote, ["id", "timestamp"])
 export type AddNote = typeof addNote.static
 
 const _changeNote = createUpdateSchema(notesTable)
-const changeNote = t.Omit(_changeNote, ["id"])
+export const changeNote = t.Omit(_changeNote, ["id", "timestamp", "author"])
 export type ChangeNote = typeof changeNote.static
 
 

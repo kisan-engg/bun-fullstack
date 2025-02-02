@@ -6,5 +6,5 @@ export const notes = pgTable("notes", {
     text: text("text").notNull(),
     subject: text("subject").notNull(),
     author: text('user_id').notNull().references(() => user.id),
-    timestamp: timestamp('timestamp').notNull(),
+    timestamp: timestamp('timestamp').defaultNow().notNull(),
 })

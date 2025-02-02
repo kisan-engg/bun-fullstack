@@ -1,48 +1,46 @@
 <script lang="ts">
-    import { deleteIt, getActive, getIt, postIt, setActive, updateIt, type NoteInfo } from "../lib/notes";
+    import { Notebook, type NoteInfo, type NoteOperationInfo, } from "../lib/notes";
     import AddNote from "./add-note.svelte";
     import AllNotes from "./all-notes.svelte";
 
-    let notes = $state([] as Partial<NoteInfo>[]);
+    let notes: NoteInfo[] = $state([]);
     let editMode = $state(false)
+
+    const notebook = Notebook()
     
-    const getNotes = async () => {
-        notes = await getIt()
-    };
-    let nIndex:number = 0;
-    const saveNote = async (noteInfo: NoteInfo) => {
-        let note;
-        if(editMode) {
-            note = await updateIt(nIndex, noteInfo)            
-            changeEditMode(false)
-        }
-        else
-            note = await postIt(noteInfo)
-        notes.splice(nIndex, 0, note)
-    };
-    const deleteNote = async(index: number) => {
-        await deleteIt(index);
-        notes.splice(index, 1)
-    }    
-    // svelte-ignore non_reactive_update
-    let changeMode: (enabled: boolean) => void;
-    const noteMode = (editEnabled: boolean, index?:number) => {
-        if(editEnabled) {
-            nIndex = index??-1;
-            setActive(notes.splice(nIndex, 1)[0])
-        } else {
-            notes.splice(nIndex, 0, getActive())
-            nIndex = 0;
-        }
-        changeEditMode(editEnabled)
+    const getNotes = async() => { notes = await notebook.get()}
+    const addNote = async(noteInfo: Partial<NoteInfo>) => {         
+        const addedNote = await notebook.add(noteInfo)
+        notes.unshift(addedNote)
+        changeSaveMode(false)
     }
-    const changeEditMode = (enabled: boolean) => {
-        editMode = enabled;
-        changeMode(enabled);
+    const deleteNote = async(index: number, noteId: number) => { 
+        await notebook.delete(noteId)
+        notes.splice(index, 1)
+
+    }  
+    const updateNote = async(updatedInfo: NoteOperationInfo) => { 
+        const updatedNote =  await notebook.udpate(updatedInfo.note) 
+        notes.splice(updatedInfo.index, 1, updatedNote)
+        editNote(false)
+    }
+
+    // svelte-ignore non_reactive_update
+    let changeSaveMode: (enabled: boolean, activeNote?: NoteOperationInfo) => void;    
+    const editNote = (enable: boolean, activeNote?: NoteOperationInfo) => {
+        editMode = enable
+        changeSaveMode(enable, activeNote)
     }
     /*  */
-    getNotes();
+    getNotes()
+    /*  */
 </script>
 
-<AddNote bind:changeMode={changeMode} {saveNote} {editMode} {noteMode}/>
-<AllNotes {notes} {deleteNote} {editMode} {noteMode}/>
+<AddNote 
+    {addNote}
+    {editMode}
+    {editNote}
+    bind:changeSaveMode={changeSaveMode}   
+    {updateNote}  
+/>
+<AllNotes {notes} {deleteNote} {editMode} {editNote}/>

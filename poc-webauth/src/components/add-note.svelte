@@ -1,31 +1,46 @@
 <script lang="ts">
-    import { getActive, type NoteInfo } from "../lib/notes";
+    import { Notebook, type NoteInfo, type NoteOperationInfo } from "../lib/notes";
     
-    let {saveNote, changeMode = $bindable(), editMode, noteMode } = $props()
+    let {addNote, editMode, editNote, changeSaveMode = $bindable(), updateNote } = $props()
 
-    const note = $state({text:"", subject: ""})
-    const resetNote = (iNote?: Partial<NoteInfo> | undefined) => {
-        note.text = iNote?.text ||  ""
-        note.subject = iNote?.subject || ""
+    const noteNow = $state({text:"", subject: ""})
+    const getNoteSnapShot = () => {
+        return $state.snapshot(noteNow)
+    }
+    const resetNote = (iNote?: Partial<NoteInfo>) => {
+        noteNow.text = iNote?.text ||  ""
+        noteNow.subject = iNote?.subject || ""
     }
 
-    const addNote = (event: Event) => {
+    const notebook = Notebook()
+    let currentNote: NoteOperationInfo;
+    const saveNote = (event: Event) => {
         event.preventDefault();
-        saveNote({
-            ...note, 
-            timestamp: new Date().getTime()
-        })
-        resetNote()
+        if(editMode && currentNote) {
+            const { index, note} = currentNote;
+            const updatedInfo: NoteOperationInfo = { index, note: { ...note, ...getNoteSnapShot() }}
+            updateNote(updatedInfo)
+
+        } else {
+            addNote(getNoteSnapShot())
+        }
     }
-    /*  */
-    changeMode = (editEnabled: boolean) => editEnabled? resetNote(getActive()): resetNote()
+    
+    changeSaveMode = (editEnabled: boolean, activeNote?:NoteOperationInfo) => {
+        if(editEnabled && activeNote) {
+            currentNote = activeNote;            
+            resetNote(activeNote.note)
+        } else {
+            resetNote()
+        }
+    }
 
 </script>
 
-<form class="max-w-md mx-auto" onsubmit={addNote}>
+<form class="max-w-md mx-auto" onsubmit={saveNote}>
     <div class="relative z-0 w-full mt-2 mb-5 group">
         <input
-            bind:value={note.subject}
+            bind:value={noteNow.subject}
             type="text"
             name="note_subject"
             id="note_subject"
@@ -43,7 +58,7 @@
     <div class="relative z-0 w-full mt-2 mb-5 group">
         <textarea
             id="message"
-            bind:value={note.text}
+            bind:value={noteNow.text}
             rows="2"
             class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:text-white dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer"
             minlength="4"
@@ -64,7 +79,7 @@
             Save
         </button>
         {#if editMode}
-        <button type="button" onclick={() => noteMode(false)}
+        <button type="button" onclick={() => editNote(false)}
             class="text-gray-900 hover:text-white border border-gray-800 hover:bg-gray-900 focus:ring-4 focus:outline-none focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 dark:border-gray-600 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-800 dark:focus:ring-gray-800"
         >
             Cancel

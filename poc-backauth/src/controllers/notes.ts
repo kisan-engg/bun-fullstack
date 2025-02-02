@@ -1,50 +1,53 @@
 import Elysia, { t } from "elysia";
-import { Note } from "../model/note.model";
-import { userMiddleware } from "../lib/auth-middleware";
+import { Note, addNote, changeNote } from "../model/note.model";
+import { userValidation } from "../lib/auth-middleware";
 
 const notes = new Elysia({ prefix: "api/notes" })
-  .decorate('note', new Note())
-  .derive(({ request }) => {
-    return userMiddleware(request)
-  })
+  .decorate('notebook', new Note())
+  .use(userValidation)
   .model({
-    memo: t.Omit(memo, ['author'])
+    newNote: t.Omit(addNote, ['author']),
+    updateNote: changeNote
   })
-  .get("/", ({ note }) => {
-    return note.data
+  .get("/", async ({ user, notebook, error }) => {
+    if (!user) return error(401)
+    const res = await notebook.get(user.id)
+    if (!res) return error(500)
+    return res
   })
-  .post('/', ({ note, body: { text, subject, timestamp }, user}) => {
-      return note.add({ text, subject, timestamp, author: user?.name })
-    },
+  .post('/', async ({ notebook, body: { text, subject }, user, error }) => {
+    if (!user) return error(401)
+    const res = await notebook.add({ text, subject, author: user.id })
+    if (!res) return error(500)
+    return res
+  },
     {
-      body: 'memo'
+      body: 'newNote'
     }
   )
   .guard({
     params: t.Object({
-      index: t.Number({
+      noteId: t.Number({
         minimum: 0,
       })
     })
   })
-  .delete(
-    '/:index',
-    ({ note, params: { index }, error }) => {
-      if (index < note.data.length) return note.remove(index);
-      return error(422)
-    }
-  )  
-  .patch(
-    '/:index',
-    ({ note, params: { index }, body: { text, subject, timestamp }, error, user }) => {
-      if (index in note.data){
-        return note.update(index, { text, subject, timestamp, author: user?.name })
-      }
-      return error(422)
-    },
+  .delete('/:noteId', async ({ notebook, params: { noteId }, user, error }) => {
+    if (!user) return error(401)
+    const result = await notebook.remove(noteId)
+    if (!result) error(422)
+    return result
+  }
+  )
+  .patch('/:noteId', async ({ notebook, params: { noteId }, body: { text, subject }, error, user }) => {
+    if (!user) return error(401)
+    const res = notebook.update(noteId, { text, subject })
+    if (!res) return error(500)
+    return res
+  },
     {
-      body: 'memo'
+      body: 'updateNote'
     }
-  );
+  )
 
 export default notes;

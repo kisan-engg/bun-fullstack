@@ -18,5 +18,19 @@ export default defineConfig({
         secure: false
       }
     }
-  }
+  },
+  preview: {
+    port: 3000,
+    proxy: {
+      "/api/auth/*": {
+        target: 'http://localhost:4000/',
+        changeOrigin: true,
+      },
+      "/api/notes": {
+        target: 'http://localhost:4000/',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
 })

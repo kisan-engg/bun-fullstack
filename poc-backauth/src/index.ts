@@ -3,7 +3,6 @@ import Elysia from "elysia";
 import notes from "./controllers/notes";
 import betterAuthView from "./lib/auth.view";
 import { cors } from '@elysiajs/cors'
-import { userInfo, userMiddleware } from "./lib/auth-middleware";
 
 const app = new Elysia()
   .use(swagger())
@@ -11,7 +10,7 @@ const app = new Elysia()
   .all("api/auth/*", betterAuthView)  
   .use(notes)
   .onError(({ error }) => {
-    console.log("Error: ", error)
+    //console.log("Error: ", error)
   })
   .listen(4000);
 
