@@ -43,6 +43,15 @@ Running this application in local would require running two bun/node instances f
 ## Setup DB <a name = "setupdb"></a>
 Create db name <strong>'users'</strong>.
 I am using user <strong>pgelysia</strong>, feel free to use postgres as user.
+helping script:
+<ul>
+<li>CREATE DATABASE users;</li>
+<li>CREATE USER pgelysia WITH ENCRYPTED PASSWORD 'fullstack';</li>
+<li>GRANT ALL PRIVILEGES ON DATABASE users TO pgelysia;</li>
+<li>\c users postgres</li>
+<li>(# You are now connected to database "users" as user "postgres".)</li>
+<li>GRANT ALL ON SCHEMA public TO pgelysia;</li>
+</ul>
 </br>
 Make sure to use right user and db name
 ```
